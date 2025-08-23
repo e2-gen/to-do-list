@@ -4,35 +4,33 @@ require_once '../includes/google-config.php';
 require_once '../includes/database.php';
 require_once '../includes/security.php';
 
-// إنشاء كائن Google Client
-$client = new Google_Client();
-$client->setClientId(GOOGLE_CLIENT_ID);
-$client->setClientSecret(GOOGLE_CLIENT_SECRET);
-$client->setRedirectUri(GOOGLE_REDIRECT_URI);
-$client->addScope('email');
-$client->addScope('profile');
-
 // معالجة الاستجابة من جوجل
 if (isset($_GET['code'])) {
     try {
         // استبدال رمز المصادقة ب token
-        $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
-        $client->setAccessToken($token);
-
-        // الحصول على معلومات المستخدم
-        $google_oauth = new Google_Service_Oauth2($client);
-        $google_account_info = $google_oauth->userinfo->get();
+        $tokenData = getGoogleAccessToken($_GET['code']);
         
-        $email = $google_account_info->email;
-        $name = $google_account_info->name;
-        $google_id = $google_account_info->id;
-        $picture = $google_account_info->picture;
+        if (!$tokenData || !isset($tokenData['access_token'])) {
+            throw new Exception('فشل في الحصول على token من جوجل');
+        }
+        
+        // الحصول على معلومات المستخدم
+        $userInfo = getGoogleUserInfo($tokenData['access_token']);
+        
+        if (!$userInfo || !isset($userInfo['email'])) {
+            throw new Exception('فشل في الحصول على معلومات المستخدم من جوجل');
+        }
+        
+        $email = Sanitizer::sanitizeInput($userInfo['email']);
+        $name = isset($userInfo['name']) ? Sanitizer::sanitizeInput($userInfo['name']) : '';
+        $google_id = isset($userInfo['sub']) ? Sanitizer::sanitizeInput($userInfo['sub']) : '';
+        $picture = isset($userInfo['picture']) ? Sanitizer::sanitizeInput($userInfo['picture']) : '';
 
         // التحقق من وجود المستخدم في قاعدة البيانات
         $db = new Database();
         $conn = $db->getConnection();
 
-        // البحث عن المستخدم باستخدام البريد الإلكتروني
+        // البحث عن المستخدم باستخدام البريد الإلكتروني أو google_id
         $query = "SELECT * FROM users WHERE email = :email OR google_id = :google_id";
         $stmt = $conn->prepare($query);
         $stmt->bindParam(':email', $email);
@@ -45,9 +43,10 @@ if (isset($_GET['code'])) {
             
             // تحديث معلومات جوجل إذا لزم الأمر
             if (empty($user['google_id'])) {
-                $updateQuery = "UPDATE users SET google_id = :google_id WHERE id = :id";
+                $updateQuery = "UPDATE users SET google_id = :google_id, profile_picture = :picture WHERE id = :id";
                 $updateStmt = $conn->prepare($updateQuery);
                 $updateStmt->bindParam(':google_id', $google_id);
+                $updateStmt->bindParam(':picture', $picture);
                 $updateStmt->bindParam(':id', $user['id']);
                 $updateStmt->execute();
             }
@@ -62,8 +61,7 @@ if (isset($_GET['code'])) {
             exit();
         } else {
             // المستخدم جديد، إنشاء حساب جديد
-            // إنشاء اسم مستخدم من الاسم الكامل
-            $username = generateUsernameFromName($name);
+            $username = generateUsernameFromName($name, $email);
             
             // التأكد من أن اسم المستخدم فريد
             $username = makeUniqueUsername($conn, $username);
@@ -105,17 +103,23 @@ if (isset($_GET['code'])) {
     exit();
 }
 
-// دالة لإنشاء اسم مستخدم من الاسم الكامل
-function generateUsernameFromName($name) {
-    $username = strtolower(str_replace(' ', '', $name));
-    $username = preg_replace('/[^a-z0-9]/', '', $username);
-    
-    // إذا كان الاسم قصيرًا، أضف أرقام عشوائية
-    if (strlen($username) < 4) {
-        $username .= rand(100, 999);
+// دالة لإنشاء اسم مستخدم من الاسم الكامل أو البريد الإلكتروني
+function generateUsernameFromName($name, $email) {
+    if (!empty($name)) {
+        $username = strtolower(str_replace(' ', '', $name));
+        $username = preg_replace('/[^a-z0-9]/', '', $username);
+        
+        // إذا كان الاسم قصيرًا، أضف أرقام عشوائية
+        if (strlen($username) < 4) {
+            $username .= rand(100, 999);
+        }
+        
+        return $username;
+    } else {
+        // استخدام جزء من البريد الإلكتروني إذا لم يكن هناك اسم
+        $emailParts = explode('@', $email);
+        return preg_replace('/[^a-z0-9]/', '', $emailParts[0]);
     }
-    
-    return $username;
 }
 
 // دالة لجعل اسم المستخدم فريدًا
