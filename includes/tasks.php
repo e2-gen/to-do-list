@@ -1,5 +1,6 @@
 <?php
 require_once 'database.php';
+require_once 'security.php';
 
 class TaskManager {
     private $db;
@@ -12,6 +13,10 @@ class TaskManager {
 
     // إنشاء مهمة جديدة
     public function createTask($title, $description, $due_date, $priority, $user_id, $category_id = null) {
+        // تنقية المدخلات
+        $title = Sanitizer::sanitizeInput($title);
+        $description = Sanitizer::sanitizeInput($description);
+        
         $query = "INSERT INTO tasks (title, description, due_date, priority, user_id, category_id) 
                   VALUES (:title, :description, :due_date, :priority, :user_id, :category_id)";
         $stmt = $this->conn->prepare($query);
@@ -27,6 +32,10 @@ class TaskManager {
 
     // تحديث المهمة
     public function updateTask($task_id, $title, $description, $due_date, $priority, $category_id) {
+        // تنقية المدخلات
+        $title = Sanitizer::sanitizeInput($title);
+        $description = Sanitizer::sanitizeInput($description);
+        
         $query = "UPDATE tasks SET title = :title, description = :description, due_date = :due_date, 
                   priority = :priority, category_id = :category_id WHERE id = :id";
         $stmt = $this->conn->prepare($query);
@@ -40,9 +49,9 @@ class TaskManager {
         return $stmt->execute();
     }
 
-    // حذف المهمة
+    // حذف المهمة (نقل إلى الأرشيف)
     public function deleteTask($task_id, $user_id) {
-        $query = "DELETE FROM tasks WHERE id = :id AND user_id = :user_id";
+        $query = "UPDATE tasks SET deleted = 1, deleted_at = NOW() WHERE id = :id AND user_id = :user_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $task_id);
         $stmt->bindParam(':user_id', $user_id);
@@ -50,11 +59,21 @@ class TaskManager {
         return $stmt->execute();
     }
 
-    // الحصول على جميع مهام المستخدم
+    // استعادة المهمة من الأرشيف
+    public function restoreTask($task_id, $user_id) {
+        $query = "UPDATE tasks SET deleted = 0, deleted_at = NULL WHERE id = :id AND user_id = :user_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $task_id);
+        $stmt->bindParam(':user_id', $user_id);
+
+        return $stmt->execute();
+    }
+
+    // الحصول على جميع مهام المستخدم (باستثناء المحذوفة)
     public function getUserTasks($user_id, $completed = null, $category_id = null) {
         $query = "SELECT t.*, c.name as category_name FROM tasks t 
                   LEFT JOIN categories c ON t.category_id = c.id 
-                  WHERE t.user_id = :user_id";
+                  WHERE t.user_id = :user_id AND t.deleted = 0";
         
         if ($completed !== null) {
             $query .= " AND t.completed = :completed";
@@ -81,9 +100,23 @@ class TaskManager {
         return $stmt->fetchAll();
     }
 
+    // الحصول على المهام المحذوفة (في الأرشيف)
+    public function getArchivedTasks($user_id) {
+        $query = "SELECT t.*, c.name as category_name FROM tasks t 
+                  LEFT JOIN categories c ON t.category_id = c.id 
+                  WHERE t.user_id = :user_id AND t.deleted = 1
+                  ORDER BY t.deleted_at DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':user_id', $user_id);
+        $stmt->execute();
+        
+        return $stmt->fetchAll();
+    }
+
     // تحديث حالة المهمة (مكتملة/غير مكتملة)
     public function toggleTaskCompletion($task_id, $user_id) {
-        $query = "UPDATE tasks SET completed = NOT completed WHERE id = :id AND user_id = :user_id";
+        $query = "UPDATE tasks SET completed = NOT completed, completed_at = CASE WHEN completed = 0 THEN NOW() ELSE NULL END WHERE id = :id AND user_id = :user_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $task_id);
         $stmt->bindParam(':user_id', $user_id);
