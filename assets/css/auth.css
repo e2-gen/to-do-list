@@ -1,113 +1,359 @@
-/* تنسيقات صفحات المصادقة */
-.auth-container {
+/* تنسيقات صفحات المصادقة - نسخة محسنة */
+:root {
+    --primary-color: #4361ee;
+    --secondary-color: #3a0ca3;
+    --success-color: #2e7d32;
+    --error-color: #c62828;
+    --warning-color: #f9a826;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --gray-color: #6c757d;
+    --border-radius: 12px;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    --box-shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.2);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--dark-color);
+    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
     padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+    background-size: cover;
+    pointer-events: none;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 450px;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .auth-card {
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    padding: 30px;
+    padding: 40px 35px;
     width: 100%;
-    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.auth-card:hover {
+    box-shadow: var(--box-shadow-hover);
+    transform: translateY(-5px);
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
 }
 
 .auth-card h1 {
     text-align: center;
     color: var(--primary-color);
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
+    font-size: 28px;
+}
+
+.auth-card h1 i {
+    font-size: 32px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 .auth-card h2 {
     text-align: center;
     color: var(--dark-color);
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    font-weight: 600;
+    font-size: 24px;
+    position: relative;
+}
+
+.auth-card h2::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+    margin: 10px auto 0;
+    border-radius: 3px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    position: relative;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-weight: 500;
+    color: var(--dark-color);
+    transition: var(--transition);
 }
 
 .form-group input {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
+    padding: 16px 45px 16px 16px;
+    border: 2px solid #e9ecef;
     border-radius: var(--border-radius);
     font-size: 16px;
     transition: var(--transition);
+    background-color: #f8f9fa;
 }
 
 .form-group input:focus {
     border-color: var(--primary-color);
     outline: none;
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    background-color: #fff;
+}
+
+.form-group i {
+    position: absolute;
+    right: 15px;
+    top: 42px;
+    color: var(--gray-color);
+    font-size: 18px;
+}
+
+.form-group input:focus + i {
+    color: var(--primary-color);
 }
 
 .btn-primary {
     width: 100%;
-    padding: 12px;
-    background: var(--primary-color);
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     border-radius: var(--border-radius);
-    font-size: 16px;
+    font-size: 17px;
+    font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.5s;
 }
 
 .btn-primary:hover {
-    background: var(--secondary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(67, 97, 238, 0.4);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .auth-link {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 25px;
+    color: var(--gray-color);
 }
 
 .auth-link a {
     color: var(--primary-color);
     text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    position: relative;
+}
+
+.auth-link a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
     transition: var(--transition);
 }
 
 .auth-link a:hover {
-    text-decoration: underline;
+    color: var(--secondary-color);
+}
+
+.auth-link a:hover::after {
+    width: 100%;
+}
+
+.error-message, .success-message {
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 500;
+    animation: slideIn 0.5s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .error-message {
-    background: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: var(--border-radius);
-    margin-bottom: 20px;
-    text-align: center;
+    background: rgba(198, 40, 40, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(198, 40, 40, 0.2);
 }
 
 .success-message {
-    background: #e8f5e8;
-    color: #2e7d32;
-    padding: 10px;
-    border-radius: var(--border-radius);
-    margin-bottom: 20px;
-    text-align: center;
+    background: rgba(46, 125, 50, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(46, 125, 50, 0.2);
 }
 
 .success-message a {
-    color: #2e7d32;
+    color: var(--success-color);
     text-decoration: underline;
+    font-weight: 600;
+}
+
+/* تأثيرات للشاشات الصغيرة */
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 30px 25px;
+    }
+    
+    .auth-card h1 {
+        font-size: 24px;
+    }
+    
+    .auth-card h2 {
+        font-size: 20px;
+    }
+}
+
+/* تحسينات للوضع الداكن */
+@media (prefers-color-scheme: dark) {
+    .auth-card {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .auth-card h2 {
+        color: #e2e8f0;
+    }
+    
+    .form-group label {
+        color: #e2e8f0;
+    }
+    
+    .form-group input {
+        background-color: #4a5568;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .form-group input:focus {
+        background-color: #2d3748;
+    }
+}
+
+/* تحسينات لإمكانية الوصول */
+.form-group input:focus,
+.btn-primary:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* إضافة تأثيرات تحميل */
+.btn-primary.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-primary.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin: -10px 0 0 -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
