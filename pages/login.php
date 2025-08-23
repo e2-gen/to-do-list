@@ -8,6 +8,10 @@ if ($auth->isLoggedIn()) {
 }
 
 $error = '';
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
@@ -19,6 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = 'اسم المستخدم أو كلمة المرور غير صحيحة';
     }
 }
+
+// إنشاء رابط تسجيل الدخول بجوجل
+require_once '../includes/google-config.php';
+$client = new Google_Client();
+$client->setClientId(GOOGLE_CLIENT_ID);
+$client->setClientSecret(GOOGLE_CLIENT_SECRET);
+$client->setRedirectUri(GOOGLE_REDIRECT_URI);
+$client->addScope('email');
+$client->addScope('profile');
+$googleLoginUrl = $client->createAuthUrl();
 ?>
 
 <!DOCTYPE html>
@@ -53,6 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 <button type="submit" class="btn-primary">تسجيل الدخول</button>
             </form>
+            
+            <div class="social-login-divider">
+                <span>أو</span>
+            </div>
+            
+            <a href="<?php echo $googleLoginUrl; ?>" class="btn-google">
+                <i class="fab fa-google"></i> تسجيل الدخول باستخدام جوجل
+            </a>
             
             <p class="auth-link">
                 ليس لديك حساب؟ <a href="register.php">إنشاء حساب جديد</a>
