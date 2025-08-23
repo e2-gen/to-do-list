@@ -137,5 +137,56 @@ class Auth {
         $stmt->execute();
         return $stmt->fetch();
     }
+    // التحقق من وجود مستخدم جوجل
+public function getGoogleUser($google_id) {
+    $query = "SELECT id, username, email FROM users WHERE google_id = :google_id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':google_id', $google_id);
+    $stmt->execute();
+    
+    if ($stmt->rowCount() == 1) {
+        return $stmt->fetch();
+    }
+    return false;
+}
+
+// إنشاء مستخدم جوجل جديد
+public function createGoogleUser($username, $email, $google_id, $profile_picture = null) {
+    // التأكد من أن اسم المستخدم فريد
+    $username = $this->makeUniqueUsername($username);
+    
+    $query = "INSERT INTO users (username, email, google_id, profile_picture, email_verified, created_at) 
+              VALUES (:username, :email, :google_id, :profile_picture, 1, NOW())";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':username', $username);
+    $stmt->bindParam(':email', $email);
+    $stmt->bindParam(':google_id', $google_id);
+    $stmt->bindParam(':profile_picture', $profile_picture);
+    
+    if ($stmt->execute()) {
+        return $this->conn->lastInsertId();
+    }
+    return false;
+}
+
+// جعل اسم المستخدم فريدًا
+private function makeUniqueUsername($username) {
+    $originalUsername = $username;
+    $counter = 1;
+    
+    while (true) {
+        $query = "SELECT id FROM users WHERE username = :username";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        
+        if ($stmt->rowCount() == 0) {
+            return $username;
+        }
+        
+        $username = $originalUsername . $counter;
+        $counter++;
+    }
+}
 }
 ?>
