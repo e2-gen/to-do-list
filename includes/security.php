@@ -2,13 +2,9 @@
 // تحسين إعدادات الجلسة
 class SessionManager {
     public static function secureSession() {
-        // يجب أن يتم استدعاء ini_set() قبل session_start()
-        ini_set('session.cookie_httponly', 1);
-        ini_set('session.cookie_secure', 1);
-        ini_set('session.use_strict_mode', 1);
-        ini_set('session.cookie_samesite', 'Strict');
+        // لا حاجة لاستدعاء ini_set() هنا لأنها موجودة في config.php
         
-        session_start(); // تم إضافة هذا السطر هنا
+        // تم حذف session_start() من هنا
         session_regenerate_id(true);
     }
 }
