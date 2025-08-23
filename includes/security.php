@@ -2,14 +2,17 @@
 // تحسين إعدادات الجلسة
 class SessionManager {
     public static function secureSession() {
+        // يجب أن يتم استدعاء ini_set() قبل session_start()
         ini_set('session.cookie_httponly', 1);
         ini_set('session.cookie_secure', 1);
         ini_set('session.use_strict_mode', 1);
         ini_set('session.cookie_samesite', 'Strict');
         
+        session_start(); // تم إضافة هذا السطر هنا
         session_regenerate_id(true);
     }
 }
+
 // حماية من هجمات CSRF
 class CSRFProtection {
     public static function generateToken() {
@@ -45,6 +48,4 @@ class Sanitizer {
         return htmlspecialchars($output, ENT_QUOTES, 'UTF-8');
     }
 }
-
-
 ?>
