@@ -1,6 +1,7 @@
 <?php
-require_once 'database.php';
 require_once 'security.php';
+require_once 'database.php';
+
 
 class Auth {
     private $db;
