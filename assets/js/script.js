@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteButtons = document.querySelectorAll('.delete-btn');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            if (!confirm('هل أنت متأكد من أنك تريد حذف هذه المهمة؟')) {
+            if (!confirm('هل أنت متأكد من أنك تريد نقل هذه المهمة إلى الأرشيف؟')) {
                 e.preventDefault();
             }
         });
@@ -103,199 +103,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // تحميل المزيد من المهام (تقسيم الصفحات)
-    const loadMoreBtn = document.getElementById('load-more');
-    if (loadMoreBtn) {
-        let visibleTasks = 5;
-        const allTasks = Array.from(tasks);
-        
-        // إخفاء المهام الزائدة عن العدد المحدد
-        allTasks.slice(visibleTasks).forEach(task => {
-            task.style.display = 'none';
-        });
-        
-        loadMoreBtn.addEventListener('click', function() {
-            visibleTasks += 5;
+    // تحميل المزيد من المهام
+    const loadMoreButton = document.getElementById('load-more');
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', function() {
+            const hiddenTasks = document.querySelectorAll('.task[style="display: none"]');
             
-            allTasks.forEach((task, index) => {
-                if (index < visibleTasks) {
-                    task.style.display = 'flex';
-                    setTimeout(() => {
-                        task.classList.add('animate__animated', 'animate__fadeIn');
-                    }, index * 100);
-                }
+            for (let i = 0; i < 5 && i < hiddenTasks.length; i++) {
+                hiddenTasks[i].style.display = 'flex';
+            }
+            
+            if (document.querySelectorAll('.task[style="display: none"]').length === 0) {
+                this.style.display = 'none';
+            }
+        });
+    }
+    
+    // إضافة تأثيرات عند تمرير الماوس
+    const addHoverEffects = () => {
+        const elements = document.querySelectorAll('.task, .category, .btn-primary, .btn-secondary');
+        
+        elements.forEach(el => {
+            el.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
             });
             
-            // إخفاء زر "تحميل المزيد" إذا لم تبق مهام
-            if (visibleTasks >= allTasks.length) {
-                loadMoreBtn.style.display = 'none';
+            el.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            });
+        });
+    };
+    
+    addHoverEffects();
+    
+    // إضافة ميزة السحب والإفلات لإعادة ترتيب المهام
+    if (document.getElementById('tasks-container')) {
+        new Sortable(document.getElementById('tasks-container'), {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // هنا يمكن إضافة كود لحفظ الترتيب الجديد في قاعدة البيانات
+                console.log('تم تغيير ترتيب المهمة', evt.oldIndex, 'إلى', evt.newIndex);
             }
         });
     }
     
-    // عرض/إخفاء التفاصيل الإضافية
-    tasks.forEach(task => {
-        task.addEventListener('click', function(e) {
-            if (e.target.tagName !== 'A' && !e.target.closest('a')) {
-                const details = this.querySelector('.task-details');
-                const description = this.querySelector('.task-description');
-                
-                if (description) {
-                    description.classList.toggle('expanded');
-                    
-                    if (description.classList.contains('expanded')) {
-                        description.style.maxHeight = description.scrollHeight + 'px';
-                    } else {
-                        description.style.maxHeight = '3em';
-                    }
-                }
-            }
-        });
+    // إضافة مؤقت للرسائل المنبثقة
+    const messages = document.querySelectorAll('.alert');
+    messages.forEach(message => {
+        setTimeout(() => {
+            message.style.opacity = '0';
+            message.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => message.remove(), 500);
+        }, 3000);
     });
-    
-    // تحسين تجربة لوحة المفاتيح
-    document.addEventListener('keydown', function(e) {
-        // إضافة مهمة جديدة عند الضغط على Enter في حقل الإدخال
-        if (e.key === 'Enter' && e.target.matches('input[type="text"]')) {
-            e.target.closest('form').querySelector('button[type="submit"]').click();
-        }
-        
-        // البحث عند الكتابة في حقل البحث
-        if (e.target.matches('#task-search') && e.key.length === 1) {
-            // البحث يتم تلقائياً عبر event listener مسبق
-        }
-    });
-    
-    // إشعارات التحديث
-    const showNotification = (message, type = 'info') => {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            <span>${message}</span>
-            <button class="close-notification"><i class="fas fa-times"></i></button>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // إظهار الإشعار
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        
-        // إخفاء الإشعار تلقائياً بعد 5 ثوان
-        setTimeout(() => {
-            closeNotification(notification);
-        }, 5000);
-        
-        // إغلاق الإشعار عند النقر على الزر
-        notification.querySelector('.close-notification').addEventListener('click', function() {
-            closeNotification(notification);
-        });
-    };
-    
-    const closeNotification = (notification) => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    };
-    
-    // إضافة تأثيرات للعناصر عند التحميل
-    setTimeout(() => {
-        document.querySelectorAll('.card, .task, .category').forEach((el, index) => {
-            el.style.animationDelay = `${index * 0.1}s`;
-        });
-    }, 100);
 });
-
-// تأثيرات CSS للرسومات المتحركة
-const style = document.createElement('style');
-style.textContent = `
-    .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        color: #333;
-        padding: 16px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        z-index: 1000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        max-width: 350px;
-    }
-    
-    .notification.show {
-        transform: translateX(0);
-    }
-    
-    .notification.success {
-        border-left: 4px solid #4ade80;
-    }
-    
-    .notification.error {
-        border-left: 4px solid #ef4444;
-    }
-    
-    .notification.info {
-        border-left: 4px solid #4361ee;
-    }
-    
-    .close-notification {
-        background: none;
-        border: none;
-        cursor: pointer;
-        margin-left: auto;
-        color: #64748b;
-    }
-    
-    .task-description {
-        max-height: 3em;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        transition: max-height 0.3s ease;
-    }
-    
-    .animate__animated {
-        animation-duration: 0.5s;
-    }
-    
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translate3d(0, 40px, 0);
-        }
-        to {
-            opacity: 1;
-            transform: translate3d(0, 0, 0);
-        }
-    }
-    
-    .animate__fadeInUp {
-        animation-name: fadeInUp;
-    }
-    
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    
-    .animate__fadeIn {
-        animation-name: fadeIn;
-    }
-`;
-document.head.appendChild(style);
