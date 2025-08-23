@@ -1,4 +1,15 @@
 <?php
+// تحسين إعدادات الجلسة
+class SessionManager {
+    public static function secureSession() {
+        ini_set('session.cookie_httponly', 1);
+        ini_set('session.cookie_secure', 1);
+        ini_set('session.use_strict_mode', 1);
+        ini_set('session.cookie_samesite', 'Strict');
+        
+        session_regenerate_id(true);
+    }
+}
 // حماية من هجمات CSRF
 class CSRFProtection {
     public static function generateToken() {
@@ -35,15 +46,5 @@ class Sanitizer {
     }
 }
 
-// تحسين إعدادات الجلسة
-class SessionManager {
-    public static function secureSession() {
-        ini_set('session.cookie_httponly', 1);
-        ini_set('session.cookie_secure', 1);
-        ini_set('session.use_strict_mode', 1);
-        ini_set('session.cookie_samesite', 'Strict');
-        
-        session_regenerate_id(true);
-    }
-}
+
 ?>
