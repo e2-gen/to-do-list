@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// إنشاء رابط تسجيل الدخول بجوجل
+// استبدال هذا الكود:
 require_once '../includes/google-config.php';
 $client = new Google_Client();
 $client->setClientId(GOOGLE_CLIENT_ID);
@@ -42,7 +42,10 @@ $client->setRedirectUri(GOOGLE_REDIRECT_URI);
 $client->addScope('email');
 $client->addScope('profile');
 $googleLoginUrl = $client->createAuthUrl();
-?>
+
+// بهذا الكود:
+require_once '../includes/google-config.php';
+$googleLoginUrl = getGoogleAuthUrl();
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
